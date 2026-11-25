@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import '../database/database_helper.dart';
 
 class GameScreen extends StatefulWidget {
@@ -20,7 +19,7 @@ class _GameScreenState extends State<GameScreen> {
   final controller = TextEditingController();
   final db = DatabaseHelper();
 
-  void checkGuess() async {
+  Future<void> checkGuess() async {
     int? guess = int.tryParse(controller.text);
 
     if (guess == null || guess < 1 || guess > 100) {
@@ -42,9 +41,13 @@ class _GameScreenState extends State<GameScreen> {
         message = 'Congratulations! You Won!';
       });
 
-      // Save record on supported desktop platforms
-      if (!kIsWeb) {
+      try {
         await db.insertGame(secretNumber, attempts);
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          message = 'You Won! But history could not be saved.';
+        });
       }
     } else {
       setState(() {
@@ -76,9 +79,7 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Guessing Game'),
-      ),
+      appBar: AppBar(title: const Text('Guessing Game')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -87,7 +88,6 @@ class _GameScreenState extends State<GameScreen> {
             children: [
               Text(message),
               const SizedBox(height: 20),
-
               TextField(
                 controller: controller,
                 keyboardType: TextInputType.number,
@@ -96,16 +96,12 @@ class _GameScreenState extends State<GameScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
-
               const SizedBox(height: 15),
-
               ElevatedButton(
                 onPressed: isWon ? null : checkGuess,
                 child: const Text('Check Guess'),
               ),
-
               Text('Attempts: $attempts'),
-
               ElevatedButton(
                 onPressed: restartGame,
                 child: const Text('Restart Game'),

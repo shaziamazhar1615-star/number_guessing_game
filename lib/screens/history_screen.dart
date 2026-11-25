@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import '../database/database_helper.dart';
 
 class HistoryScreen extends StatelessWidget {
@@ -11,48 +10,47 @@ class HistoryScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Game History'),
       ),
-      body: kIsWeb
-          ? const Center(
-              child: Text(
-                'Database History is available on Windows.',
-              ),
-            )
-          : FutureBuilder(
-              future: DatabaseHelper().getHistory(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState ==
-                    ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
+      body: FutureBuilder(
+        future: DatabaseHelper().getHistory(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(
-                    child: Text('No Game History Yet!'),
-                  );
-                }
+          if (snapshot.hasError) {
+            return const Center(
+              child: Text('Unable to load history'),
+            );
+          }
 
-                final history = snapshot.data!;
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text('No Game History Yet!'),
+            );
+          }
 
-                return ListView.builder(
-                  itemCount: history.length,
-                  itemBuilder: (context, index) {
-                    final game = history[index];
+          final history = snapshot.data!;
 
-                    return ListTile(
-                      leading: const Icon(Icons.emoji_events),
-                      title: Text(
-                        'Winning Number: ${game['number']}',
-                      ),
-                      subtitle: Text(
-                        'Attempts: ${game['attempts']}',
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+          return ListView.builder(
+            itemCount: history.length,
+            itemBuilder: (context, index) {
+              final game = history[index];
+
+              return ListTile(
+                leading: const Icon(Icons.emoji_events),
+                title: Text(
+                  'Winning Number: ${game['number']}',
+                ),
+                subtitle: Text(
+                  'Attempts: ${game['attempts']}',
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
